@@ -1,7 +1,11 @@
+# ArrayPipe：面向大模型探索性训练的高吞吐量作业数组并行框架
+**对应文章第3章**
+针对大模型探索性训练（如超参数搜索）中传统管道并行（PP）存在的资源浪费、作业切换开销高以及管道气泡等问题，本项目提出了 ArrayPipe——一个支持作业数组并行（Job-Array Pipeline Parallelism, JAP）的新型高效训练框架。
 
-Here are key components of ArrayPipe, including Job Shop Scheduling Algorithm (Branch & Bound [1] and Genetic Algorithm [2]), Job-array parallelism, memory manager, and so on.  
+主要组件：
 
-Some details are not shown in this repository for the subsequent research, and we will show them later, coming soon.  
-  
-[1]P. Michael, “Scheduling. theory, algorithms and systems,” 1995  
-[2]https://github.com/lg-li/Genetic-Algorithm-Flexible-Job-Shop-Scheduling-Problem
+绑定器（Binder）：负责将用户提交的孪生作业智能打包为作业数组。其核心创新在于实现了低成本上下文切换（LCS）机制，通过在作业间共享CUDA上下文，并仅将模型状态（而非完整上下文）在GPU内存中交换，大幅降低了作业切换的开销。
+
+调度器（Scheduler）：为作业数组生成高效的任务执行图，旨在最小化单次迭代时间。它包含针对不同规模作业数组的定制化调度算法，并集成了在线动态调整机制，能够灵活应对探索性作业提前终止的场景，保持高吞吐量。
+
+内存管理器（Memory Manager）：为解决多作业模型状态共存于GPU带来的显存压力，该组件集成了重计算、梯度及时更新等技术。同时，它采用细粒度的GPU虚拟化策略，通过预取与卸载流水线，在主机内存与GPU显存间智能管理模型状态，平衡内存占用与通信开销。
